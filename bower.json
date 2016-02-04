@@ -1,0 +1,14 @@
+{
+  "name": "evernote-local",
+  "version": "0.0.0",
+  "homepage": "https://github.com/lianer/evernote-local",
+  "authors": [
+    "Lou Yunlong <lianer@live.cn>"
+  ],
+  "description": "印象笔记",
+  "main": "app.js",
+  "moduleType": [
+    "node"
+  ],
+  "license": "MIT"
+}
