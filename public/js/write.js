@@ -13,6 +13,12 @@
     });
 
 })(function hljsLanguage() {
+    
+    /**
+     * highlight-js
+     * http://highlightjs.readthedocs.org/en/latest/api.html
+     */
+    
     hljs.registerLanguage("javascript", function(hljs) {
         return {
             aliases: ['js'],

@@ -9,7 +9,12 @@ var tokens = {
     results: ""
 };
 
-/* GET home page. */
+/**
+ * evernote
+ * https://github.com/evernote/evernote-sdk-js
+ * develop: https://dev.yinxiang.com/doc/articles/creating_notes.php
+ * sandbox: https://sandbox.evernote.com/Home.action#n=9263521b-42aa-40b5-9a3b-0c17a0cc2f4d&ses=4&sh=2&sds=5&
+ */
 router.get('/', function(req, res, next) {
     var callbackUrl = 'http://localhost:3003/auth/callback';
 
