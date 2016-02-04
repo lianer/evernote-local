@@ -1,0 +1,64 @@
+// reset
+*{
+    margin: 0;
+    padding: 0;
+}
+body{
+    font-size: 14px;
+    line-height: 1.5;
+    font-family: "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", "宋体", Arial, Verdana, sans-serif;
+    color: #333;
+}
+img{
+    display: block;
+    border: none;
+}
+li{
+    list-style: none;
+}
+a{
+    color: inherit;
+    text-decoration: none;
+    &:hover{
+        text-decoration: underline;
+    }
+}
+:focus{
+    outline: none;
+}
+h1,h2,h3,h4,h5,h6,b,strong{
+    font-weight: normal;
+}
+
+
+header{
+    position: relative;
+    height: 50px;
+    padding: 0 20px;
+    overflow: hidden;
+    background: #44A515;
+    color: #fff;
+    .title{
+        float: left;
+        h1{
+            font-size: 20px;
+            line-height: 50px;
+        }
+    }
+    .action{
+        float: right;
+        a{
+            display: inline-block;
+            height: 24px;
+            margin: (50px-24)/2 4px;
+            padding: 0 14px;
+            line-height: 24px;
+            text-decoration: none;
+            background: #53BB20;
+            border-radius: 3px;
+            &:hover{
+                background: darken(#53BB20, 15%);
+            }
+        }
+    }
+}

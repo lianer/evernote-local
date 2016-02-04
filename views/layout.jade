@@ -3,10 +3,13 @@ html
   head
     title= title
     block link
-
+        link(rel="stylesheet", href="/css/common.css")
     block headScript
   body
     block content
 
     block footScript
+        script(src="/lib/jquery/dist/jquery.js")
+    //- livereload
+    script(src="http://127.0.0.1:35729/livereload.js", async="async", defer="defer")
         

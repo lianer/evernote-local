@@ -1,0 +1,25 @@
+extends ../layout
+
+block append link
+    link(rel="stylesheet", href="/lib/highlight-js/src/styles/default.css")
+    link(rel="stylesheet", href="/css/article.css")
+    link(rel="stylesheet", href="/css/write.css")
+
+block content
+    header
+        .title
+            h1 #{title}
+        .action
+            a.back(href="/") 返回
+            a.save#save(href="javascript:;") 保存
+    .md-editor
+        .md-input
+            textarea#md-input(placeholder="在这里输入内容")
+        .md-preview
+            article.md-article#md-article
+
+
+block append footScript
+    script(src="/lib/showdown/dist/showdown.js")
+    script(src="/lib/highlight-js/src/highlight.js")
+    script(src="/js/write.js")

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <article id="md-article" class="md-article hljs javascript"><h1 id="bodyparser">bodyParser中间件的研究</h1>
+
+    <p>接触nodejs已有一段时间了，但最近才开始落实项目，于是使用express应用生成器生成了一个应用。开发过程中发现ajax提交的数据无法被express正确的解析，主要的情况是这样的：</p>
+
+    <pre><code class="javascript language-javascript"><span class="hljs-comment">// 浏览器端post一个对象</span>
+    $.ajax({
+        url: <span class="hljs-string">"/save"</span>,
+        type: <span class="hljs-string">"post"</span>,
+        data: {
+            name: <span class="hljs-string">"henry"</span>,
+            age: <span class="hljs-number">30</span>,
+            hobby: [ <span class="hljs-string">"sport"</span>, <span class="hljs-string">"coding"</span> ]
+        }
+    });
+
+    <span class="hljs-comment">// express接收这个对象</span>
+    router.post(<span class="hljs-string">"/save"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">req, res, next</span>) </span>{
+        <span class="hljs-built_in">console</span>.log(req.body); <span class="hljs-comment">// =&gt; { 'info[name]': 'henry','info[age]': '30','hobby[1]': 'sport','hobby[2]': 'coding' }</span>
+    });
+    </code></pre>
+
+    <p>显然这样的解析结果是不能直接拿来用的，莫名其妙的一个坑，困了我许久。</p>
+
+    <h2 id="bodyparser-1">bodyParser中间件</h2>
+
+    <p>bodyParser中间件用来解析http请求体，是express默认使用的中间件之一。</p>
+
+    <p>使用express应用生成器生成一个网站，它默认已经使用了 <code>bodyParser.json</code> 与 <code>bodyParser.urlencoded</code> 的解析功能，除了这两个，bodyParser还支持对text、raw的解析。</p>
+
+    <pre><code class="javascript language-javascript">app.use(bodyParser.json());
+    app.use(bodyParser.urlencoded({ extended: <span class="hljs-literal">false</span> }));
+    </code></pre>
+
+    <p>顾名思义，bodyParser.json是用来解析json数据格式的。bodyParser.urlencoded则是用来解析我们通常的form表单提交的数据，也就是请求头中包含这样的信息： <code>Content-Type: application/x-www-form-urlencoded</code></p>
+
+    <p><strong>常见的四种Content-Type类型：</strong></p>
+
+    <ul>
+    <li><code>application/x-www-form-urlencoded</code> 常见的form提交</li>
+
+    <li><code>multipart/form-data</code> 文件提交</li>
+
+    <li><code>application/json</code> 提交json格式的数据</li>
+
+    <li><code>text/xml</code> 提交xml格式的数据</li>
+    </ul>
+
+    <h2 id="urlencoded">详细解读 urlencoded</h2>
+
+    <p><code>bodyParser.urlencoded</code> 模块用于解析req.body的数据，解析成功后覆盖原来的req.body，如果解析失败则为 <code>{}</code>。该模块有一个属性extended，官方介绍如下：</p>
+
+    <p>The extended option allows to choose between parsing the URL-encoded data <span class="hljs-keyword">with</span> the querystring library (when <span class="hljs-literal">false</span>) or the qs library (when <span class="hljs-literal">true</span>). Defaults to <span class="hljs-literal">true</span>, but using the <span class="hljs-keyword">default</span> has been deprecated.</p>
+
+    <p>大致的意思就是：extended选项允许配置使用querystring(<span class="hljs-literal">false</span>)或qs(<span class="hljs-literal">true</span>)来解析数据，默认值是<span class="hljs-literal">true</span>，但这已经是不被赞成的了。</p>
+
+    <p>querystring就是nodejs内建的对象之一，用来字符串化对象或解析字符串。如</p>
+
+    <pre><code class="javascript language-javascript">querystring.parse(<span class="hljs-string">"name=henry&amp;age=30"</span>) =&gt; { name: <span class="hljs-string">'henry'</span>, age: <span class="hljs-string">'30'</span> }
+    </code></pre>
+
+    <p>那么，既然querystring已经能完成对urlencode的解析了，为什么还需要qs？qs又是什么？</p>
+
+    <h2 id="qs">qs介绍</h2>
+
+    <p>qs是一个querystring的库，在qs的功能基础上，还支持更多的功能并优化了一些安全性。比如，对象解析的支持：</p>
+
+    <pre><code class="javascript language-javascript"><span class="hljs-comment">// 内建对象 querystring</span>
+    querystring.parse(<span class="hljs-string">"info[name]=henry&amp;info[age]=30&amp;hobby[1]=sport&amp;hobby[2]=coding"</span>) =&gt; 
+      { 
+        <span class="hljs-string">'info[name]'</span>: <span class="hljs-string">'henry'</span>,
+        <span class="hljs-string">'info[age]'</span>: <span class="hljs-string">'30'</span>,
+        <span class="hljs-string">'hobby[1]'</span>: <span class="hljs-string">'sport'</span>,
+        <span class="hljs-string">'hobby[2]'</span>: <span class="hljs-string">'coding'</span>
+      }
+
+    <span class="hljs-comment">// 第三方插件 qs</span>
+    qs.parse(<span class="hljs-string">"info[name]=henry&amp;info[age]=30&amp;hobby[1]=sport&amp;hobby[2]=coding"</span>) =&gt; 
+      {
+        info: {
+          name: <span class="hljs-string">'henry'</span>,
+          age: <span class="hljs-string">'30'</span>
+        },
+        hobby: [ <span class="hljs-string">'sport'</span>, <span class="hljs-string">'coding'</span> ]
+      }
+    </code></pre>
+
+    <p>可以看出，querystring并不能正确的解析复杂对象（多级嵌套），而qs却可以做到。</p>
+
+    <p>但是qs也不是万能的，对于多级嵌套的对象，qs只会解析<span class="hljs-number">5</span>层嵌套，超出的部分会表现的跟本文头部的那种情况一样；对于数组，qs最大只会解析<span class="hljs-number">20</span>个索引，超出的部分将会以键值对的形式解析。</p>
+
+    <p>作为一个中间件，qs必须要为性能考虑，才会有如此多的限制，express也默认使用qs来解析请求体。</p>
+
+    <p>理论上来说，form表单提交不会有多级嵌套的情况，而urlencoded本身也是form的内容类型，因此，bodyParser.urlencoded不支持多级嵌套也是很合理的设计。</p>
+
+    <p>那么，如果我们非要上传一个十分复杂的对象，应该怎么办？</p>
+
+    <h2 id="">解决方案</h2>
+
+    <p>出现这个问题的根本原因是：我以form的形式去提交了一个json数据。</p>
+
+    <p>jquery默认的 <code>content-Type</code> 配置的是 <code>application/x-www-form-urlencoded</code>，</p>
+
+    <p>因此更改ajax请求参数：<code>contentType: <span class="hljs-string">"application/json"</span></code>，并将数据转成json提交，问题就解决了。</p>
+
+    <pre><code class="javascript language-javascript"><span class="hljs-comment">// 浏览器端post一个对象</span>
+    $.ajax({
+        url: <span class="hljs-string">"/save"</span>,
+        type: <span class="hljs-string">"post"</span>,
+        contentType: <span class="hljs-string">"application/json"</span>,
+        data: <span class="hljs-built_in">JSON</span>.stringify({
+            name: <span class="hljs-string">"henry"</span>,
+            age: <span class="hljs-number">30</span>,
+            hobby: [ <span class="hljs-string">"sport"</span>, <span class="hljs-string">"coding"</span> ]
+        })
+    });
+
+    <span class="hljs-comment">// express接收这个对象</span>
+    router.post(<span class="hljs-string">"/save"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">req, res, next</span>) </span>{
+        <span class="hljs-built_in">console</span>.log(req.body); <span class="hljs-comment">// =&gt; { name: 'henry', age: 30, hobby: [ 'sport', 'coding' ] }</span>
+    });
+    </code></pre>
+
+    <h2 id="-1">参考资料</h2>
+
+    <ul>
+    <li><a href="https://github.com/expressjs/body-parser">body-parser</a></li>
+
+    <li><a href="https://github.com/ljharb/qs">qs</a></li>
+    </ul>
+
+    <p><strong>大多时候，我们只知道如何去使用，而不知道为什么这么用。</strong></p></article>
+</body>
+</html>
